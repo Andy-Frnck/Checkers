@@ -1,0 +1,23 @@
+.header{
+  display:flex;
+  justify-content: center;
+  align-items: center;
+}
+.description{
+  flex: 1;
+  display:flex;
+}
+.links-interactive{
+  display: flex;
+  flex-shrink: 0;
+}
+.settings{
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  transition: all .25s;
+}
+.settings:hover{
+  background-color: grey;
+  text-decoration: underline;
+}
