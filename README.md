@@ -1,0 +1,1 @@
+it is a project of creating a custom checkers depending on your personal preferences 
