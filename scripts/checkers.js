@@ -25,9 +25,47 @@ squares.forEach((square, i) => {
   } else if (color === theme[1] && (i + 1) % 8 !== 0) {
     color = theme[0];
   }
-  if(square.style.backgroundColor === "rgb(77, 42, 0)"){
-    if (i<24 || i>=40) {
-      square.innerHTML =`<div class='piece' ${i>=40 ? `style="background-color: #fff"`:''}></div>`
+  if (square.style.backgroundColor === "rgb(77, 42, 0)") {
+    if (i < 24 || i >= 40) {
+      square.innerHTML = `<div class='piece' ${i >= 40 ? `style="background-color: #fff" data-color-piece="white"` : 'data-color-piece="black"'}></div>`;
     }
   }
+});
+
+/*
+1. introduce a click to each piece ✅
+2. highlight the moves available✅
+2.1. a little animation when illegal move
+3. move the right piece when clicking to the highlighted square
+4. introduce the notion of turn
+5. introduce the notion of forcing captures
+5.1. make sure the double capture is possible
+6. make the game customizable
+7. how to put new rules
+*/
+
+let pieces = document.querySelectorAll(".piece");
+let moves = [];
+
+pieces.forEach((piece) => {
+  piece.addEventListener("click", () => {
+    let position = piece.parentElement.getAttribute("id");
+
+    let { colorPiece } = piece.dataset;
+
+    if (colorPiece === "black") {
+      moves = [Number(position) + 7, Number(position) + 9];
+    } else {
+      moves = [Number(position) - 7, Number(position) - 9];
+    }
+
+    for (let i = 0; i < moves.length; i++) {
+      const element = moves[i];
+
+      let square = document.getElementById(element);
+
+      square.style.backgroundColor = "red";
+      console.log(square);
+    }
+  });
 });
