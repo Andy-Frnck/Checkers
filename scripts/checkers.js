@@ -33,7 +33,7 @@ function setupBoard() {
   squares.forEach((square, i) => {
     if (square.style.backgroundColor === "rgb(77, 42, 0)") {
       if (i < 24 || i >= 40) {
-        square.innerHTML = `<div class='piece' ${i >= 40 ? `style="background-color: #fff" data-color-piece="white"` : 'data-color-piece="black"'}></div>`;
+        square.innerHTML = `<div class='piece' ${i >= 20 ? `style="background-color: #fff" data-color-piece="white"` : 'data-color-piece="black"'}></div>`;
       }
     }
   });
@@ -55,7 +55,6 @@ setupBoard()
 */
 
 function movesAvailableFor(piece) {
-  piece.addEventListener("click", () => {
     let position = Number(piece.parentElement.getAttribute("id"));
 
     let { colorPiece } = piece.dataset;
@@ -75,15 +74,33 @@ function movesAvailableFor(piece) {
     colorSquares()
     moves.forEach( moving =>{
       let square = document.getElementById(moving);
-      square.style.backgroundColor = "red"
+      let nextPiece = square.children[0]
+      if (square.hasChildNodes()) {
+        checkCapture(piece,nextPiece)
+      }else{
+        square.style.backgroundColor = "green"
+      }
     })
+}
 
-  });
+// finishing the checkcapture function
+function checkCapture(clickedPiece,nextPiece) {
+
+  let colorPieceClicked = clickedPiece.dataset.colorPiece
+  let colorNextPiece = nextPiece.dataset.colorPiece
+  
+  if (colorPieceClicked === colorNextPiece) {
+    nextPiece.parentElement.style.backgroundColor = "red"
+  } else {
+    nextPiece.parentElement.style.backgroundColor = "aqua"
+  }
 }
 
 let pieces = document.querySelectorAll(".piece");
 let moves = [];
 
 pieces.forEach((piece) => {
-  movesAvailableFor(piece)
+  piece.addEventListener('click',()=>{
+    movesAvailableFor(piece)
+  })
 });
