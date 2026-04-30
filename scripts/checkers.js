@@ -41,7 +41,7 @@ function setupBoard() {
 }
 setupBoard();
 
-/*
+/* todo:
 1. introduce a click to each piece ✅
 2. highlight the moves available✅
 2.1. a little animation when illegal move
@@ -53,6 +53,7 @@ setupBoard();
 5.1. make sure the double capture is possible
 6. make the game customizable
 7. how to put new rules
+8. Add the drag and drop behavior
 */
 
 function movesAvailableFor(piece) {

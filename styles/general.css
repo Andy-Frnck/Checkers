@@ -1,0 +1,21 @@
+body{
+  background-color: #4d2a00; /* Deep Espresso Base */
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(47, 90%, 68%, 0.5) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(47, 90%, 68%, 0.3) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(47, 90%, 68%, 0.4) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(47, 90%, 68%, 0.2) 0px, transparent 50%);
+}
+.header {
+  background: rgba(247, 213, 100, 0.1); 
+  border-radius: 16px;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  color: rgb(247, 213, 100);
+  text-align: center;
+}
+p{
+  font-family: Oxygen;
+}
