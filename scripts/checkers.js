@@ -1,5 +1,7 @@
 // generating the board with javascript
+let lastPiece="";
 let board = document.querySelector(".board");
+let activeSquare;
 
 let square = ``;
 
@@ -48,7 +50,7 @@ setupBoard();
 2.2. exception for edge pieces✅
 2.3. showing moves individually for each piece clicked✅
 3. move the right piece when clicking to the highlighted square✅
-4. introduce the notion of turn
+4. introduce the notion of turn✅
 5. introduce the notion of forcing captures
 5.1. make sure the double capture is possible
 6. make the game customizable
@@ -57,6 +59,7 @@ setupBoard();
 */
 
 function movesAvailableFor(piece) {
+  let moves = [];
   let position = Number(piece.parentElement.getAttribute("id"));
 
   let { colorPiece } = piece.dataset;
@@ -99,28 +102,49 @@ function checkCapture(clickedPiece, nextPiece) {
 
 //the start of the game
 
-let pieces = document.querySelectorAll(".piece");
-let moves = [];
-let activeSquare;
+function Showmoves(lastPiece) {
+  
+}
 
-pieces.forEach((piece) => {
-  piece.addEventListener("click", () => {
-    movesAvailableFor(piece);
-    activeSquare = piece.parentElement;
-  });
-});
+function turn(lastPiece) {
+  if (lastPiece === undefined|| lastPiece=== "black") {
+    return "white";
+  } else {
+    return "black";
+  }
+}
 
 // adding the movement of pieces
 
 function startgame() {
   let squares = document.querySelectorAll(".square");
+  let lastPiece = 'black';
+  let pieces = document.querySelectorAll(".piece");
+  
+  pieces.forEach((piece) => {
+    piece.addEventListener("click", () => {
+      let currentTurn = turn(lastPiece);
+      let colorPieceClicked = piece.dataset.colorPiece;
+      if(colorPieceClicked !== currentTurn){
+        console.log("you are" + lastPiece + "clicking again" + colorPieceClicked)
+        return;
+      }
+      if (colorPieceClicked === currentTurn) {
+        movesAvailableFor(piece);
+        activeSquare = piece.parentElement;
+      }
+    });
+  });
+
   squares.forEach((square) => {
     square.addEventListener("click", () => {
+      Showmoves(lastPiece);
       let color = square.style.backgroundColor;
 
       if (color === "green") {
         square.appendChild(activeSquare.children[0]);
         colorSquares();
+        lastPiece = square.children[0].dataset.colorPiece;
       }
     });
   });
