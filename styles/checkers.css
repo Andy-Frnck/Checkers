@@ -3,6 +3,10 @@
   display: grid;
   grid-template-columns: repeat(8, minmax(70px, 1fr));
 }
+.board.is-dragging .piece {
+  pointer-events: none;
+  /* to disable the children event to avoid flickering of the drag and drop */
+}
 .square {
   padding: 0;
   height: 80px;
@@ -11,12 +15,23 @@
   align-items: center;
   transition: all 0.2s ease;
 }
+.square.over-bad{
+  background-color: crimson !important;
+}
+.square.over-good{
+  background-color: green !important;
+}
+
 .piece {
   width: 70px;
   aspect-ratio: 1/1;
   border-radius: 50%;
   border: 2px solid grey;
   background-color: #000;
+  cursor: grab;
+  &:active{
+    cursor: grabbing;
+  }
 }
 .piece::after {
   transform: translate(8px, 9px);
@@ -27,14 +42,20 @@
 
   content: "";
   display: block;
+  
+}
+@keyframes notMe {
+  0%, 100% { translate: 0 0; }
+  15%, 45%, 75% { translate: -6px 0; }
+  30%, 60%, 90% { translate: 6px 0; }
 }
 
 @media (max-width: 760px) {
   .piece{
-    transform:matrix(0.8, 0, 0, 0.8, 0, 0);
+    scale: 0.8;
   }
   .piece::after{
-    transform:matrix(0.95, 0, 0, 0.95, 6, 6);
+    transform:matrix(0.95, 0, 0, 0.95, 5, 5);
   }
   .board {
     grid-template-columns: repeat(8, minmax(0, 1fr));

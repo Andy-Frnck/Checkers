@@ -1,7 +1,5 @@
 // generating the board with javascript
-let lastPiece="";
 let board = document.querySelector(".board");
-let activeSquare;
 
 let square = ``;
 
@@ -36,7 +34,7 @@ function setupBoard() {
   squares.forEach((square, i) => {
     if (square.style.backgroundColor === "rgb(77, 42, 0)") {
       if (i < 24 || i >= 40) {
-        square.innerHTML = `<div class='piece' ${i >= 40 ? `style="background-color: #fff" data-color-piece="white"` : 'data-color-piece="black"'}></div>`;
+        square.innerHTML = `<div class='piece' ${i >= 40 ? `style="background-color: #fff" data-color-piece="white"` : 'data-color-piece="black"'} id="piece${i}" draggable="true"></div>`;
       }
     }
   });
@@ -51,6 +49,7 @@ setupBoard();
 2.3. showing moves individually for each piece clicked✅
 3. move the right piece when clicking to the highlighted square✅
 4. introduce the notion of turn✅
+4.1. animation when its not your turn
 5. introduce the notion of forcing captures
 5.1. make sure the double capture is possible
 6. make the game customizable
@@ -100,14 +99,79 @@ function checkCapture(clickedPiece, nextPiece) {
   }
 }
 
-//the start of the game
+// Adding the drag and drop API to pieces
 
-function Showmoves(lastPiece) {
-  
+function dragDropAPI(lastPiece) {
+
+  // todo: to introduce the notion of turn with the drag and drop API
+  let squares = document.querySelectorAll(".square");
+  let pieces = document.querySelectorAll(".piece");
+
+  squares.forEach((square, i) => {
+    if (square.style.backgroundColor === "rgb(77, 42, 0)") {
+      square.addEventListener("dragover", (e) => {
+        e.preventDefault();
+      });
+      square.addEventListener("dragenter", (e) => {
+        e.preventDefault();
+        if (e.currentTarget.hasChildNodes()) {
+          e.currentTarget.classList.add("over-bad");
+        }
+        let color = square.style.backgroundColor
+        console.log(color)
+        if(color === "green"){
+          e.currentTarget.classList.add("over-good")
+        }
+      });
+      square.addEventListener("dragleave", (e) => {
+        e.currentTarget.classList.remove("over-bad");
+        
+      });
+      // you have to add a condition so that if the square has a class of over-bad we are not supposed to drop (it shows an error and the piece return in its home square)
+      square.addEventListener("drop", (e) => {
+        const idPiece = e.dataTransfer.getData("text/plain");
+
+        const pieceTaken = document.getElementById(idPiece);
+
+        e.currentTarget.appendChild(pieceTaken);
+        e.currentTarget.classList.remove("over-bad");
+        e.currentTarget.classList.remove("over-good");
+        colorSquares();
+      });
+    }
+  });
+  pieces.forEach((piece) => {
+    piece.addEventListener("dragstart", (e) => {
+      let currentTurn = turn(lastPiece);
+      let { colorPiece } = piece.dataset;
+      board.classList.add("is-dragging")
+      if (colorPiece !== currentTurn) {
+        piece.setAttribute("draggable", "false");
+      } else {
+        piece.setAttribute("draggable", "true");
+      }
+      if (colorPiece === currentTurn) {
+        e.dataTransfer.setData("text/plain", e.target.id);
+        movesAvailableFor(piece);
+      }
+    });
+    piece.addEventListener("dragend",e=>{
+      let currentTurn = turn(lastPiece);
+      let { colorPiece } = piece.dataset;
+      if (colorPiece !== currentTurn) {
+        piece.setAttribute("draggable", "false");
+      }
+      board.classList.remove("is-dragging")
+    })
+  });
 }
 
+//the start of the game
+
+function Showmoves(lastPiece) {}
+
 function turn(lastPiece) {
-  if (lastPiece === undefined|| lastPiece=== "black") {
+  if (lastPiece === undefined || lastPiece === "black") {
     return "white";
   } else {
     return "black";
@@ -118,36 +182,41 @@ function turn(lastPiece) {
 
 function startgame() {
   let squares = document.querySelectorAll(".square");
-  let lastPiece = 'black';
+  let lastPiece = "black";
   let pieces = document.querySelectorAll(".piece");
-  
+  let activePiece = "";
+
   pieces.forEach((piece) => {
-    piece.addEventListener("click", () => {
+    piece.addEventListener("click", (e) => {
       let currentTurn = turn(lastPiece);
       let colorPieceClicked = piece.dataset.colorPiece;
-      if(colorPieceClicked !== currentTurn){
-        console.log("you are" + lastPiece + "clicking again" + colorPieceClicked)
+      if (colorPieceClicked !== currentTurn) {
+        e.target.style.animation = "notMe .5s ease-in-out";
+        e.target.onanimationend = () => {
+          e.target.style.animation = "";
+        };
+        e.target.setAttribute("draggable", "false");
         return;
       }
       if (colorPieceClicked === currentTurn) {
         movesAvailableFor(piece);
-        activeSquare = piece.parentElement;
+        activePiece = e.target;
       }
     });
   });
 
   squares.forEach((square) => {
     square.addEventListener("click", () => {
-      Showmoves(lastPiece);
       let color = square.style.backgroundColor;
 
       if (color === "green") {
-        square.appendChild(activeSquare.children[0]);
+        square.appendChild(activePiece);
         colorSquares();
         lastPiece = square.children[0].dataset.colorPiece;
       }
     });
   });
+  dragDropAPI(lastPiece);
 }
 
 startgame();
