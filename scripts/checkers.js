@@ -49,7 +49,7 @@ setupBoard();
 2.3. showing moves individually for each piece clicked✅
 3. move the right piece when clicking to the highlighted square✅
 4. introduce the notion of turn✅
-4.1. animation when its not your turn
+4.1. animation when its not your turn✅
 5. introduce the notion of forcing captures
 5.1. make sure the double capture is possible
 6. make the game customizable
@@ -79,30 +79,65 @@ function movesAvailableFor(piece) {
 
   moves.forEach((moving) => {
     let square = document.getElementById(moving);
-    let nextPiece = square.children[0];
     if (square.hasChildNodes()) {
-      checkCapture(piece, nextPiece);
+      checkCapture(piece.parentElement, moving, colorPiece);
     } else {
       square.style.backgroundColor = "green";
     }
   });
 }
 
-function checkCapture(clickedPiece, nextPiece) {
-  let colorPieceClicked = clickedPiece.dataset.colorPiece;
+function checkCapture(clickedSquare, move, color,count=1) {
+  let nextPieceSquare = document.getElementById(move);
+  let nextPiece = nextPieceSquare?.children[0];
+  if (!nextPiece) {
+    return;
+  }
   let colorNextPiece = nextPiece.dataset.colorPiece;
+  let initSquare = Number(clickedSquare.getAttribute("id"));
+  let destSquare = Number(nextPieceSquare.getAttribute("id"));
+  if(destSquare%8 === 0 || (destSquare+1)%8 === 0){
+    return;
+  }
+  let newDest = 2 * destSquare - initSquare;
+  let FinalSquare = document.getElementById(newDest);
+  console.log(color)
 
-  if (colorPieceClicked === colorNextPiece) {
+  console.log(initSquare + " et " + destSquare + "in" + newDest);
+
+  if(nextPiece.parentElement.style.backgroundColor === "aqua"){
+    return;
+  }
+  if(clickedSquare.style.backgroundColor === "white" && color=== colorNextPiece){
+    return;
+  }
+
+  if (color === colorNextPiece) {
     nextPiece.parentElement.style.backgroundColor = "red";
   } else {
-    nextPiece.parentElement.style.backgroundColor = "aqua";
+    if (FinalSquare.hasChildNodes()) {
+      return;
+    }else{
+      nextPiece.parentElement.style.backgroundColor = "aqua";
+      FinalSquare.style.backgroundColor = "white"
+      FinalSquare.classList.add(`capture-${count}`)
+      count++
+      const allDirections = [newDest - 7, newDest - 9,newDest + 7, newDest + 9]
+
+      allDirections.forEach(direction =>{
+        if(direction%8 === 0 || (direction+1)%8 === 0){
+          return;
+        }
+        checkCapture(FinalSquare, direction,color,count)
+      })
+    }
+    
   }
 }
 
 // Adding the drag and drop API to pieces
 
 function dragDropAPI(lastPiece) {
-
   // todo: to introduce the notion of turn with the drag and drop API
   let squares = document.querySelectorAll(".square");
   let pieces = document.querySelectorAll(".piece");
@@ -117,15 +152,14 @@ function dragDropAPI(lastPiece) {
         if (e.currentTarget.hasChildNodes()) {
           e.currentTarget.classList.add("over-bad");
         }
-        let color = square.style.backgroundColor
-        console.log(color)
-        if(color === "green"){
-          e.currentTarget.classList.add("over-good")
+        let color = square.style.backgroundColor;
+        console.log(color);
+        if (color === "green") {
+          e.currentTarget.classList.add("over-good");
         }
       });
       square.addEventListener("dragleave", (e) => {
         e.currentTarget.classList.remove("over-bad");
-        
       });
       // you have to add a condition so that if the square has a class of over-bad we are not supposed to drop (it shows an error and the piece return in its home square)
       square.addEventListener("drop", (e) => {
@@ -144,7 +178,7 @@ function dragDropAPI(lastPiece) {
     piece.addEventListener("dragstart", (e) => {
       let currentTurn = turn(lastPiece);
       let { colorPiece } = piece.dataset;
-      board.classList.add("is-dragging")
+      board.classList.add("is-dragging");
       if (colorPiece !== currentTurn) {
         piece.setAttribute("draggable", "false");
       } else {
@@ -155,14 +189,14 @@ function dragDropAPI(lastPiece) {
         movesAvailableFor(piece);
       }
     });
-    piece.addEventListener("dragend",e=>{
+    piece.addEventListener("dragend", (e) => {
       let currentTurn = turn(lastPiece);
       let { colorPiece } = piece.dataset;
       if (colorPiece !== currentTurn) {
         piece.setAttribute("draggable", "false");
       }
-      board.classList.remove("is-dragging")
-    })
+      board.classList.remove("is-dragging");
+    });
   });
 }
 
@@ -216,7 +250,7 @@ function startgame() {
       }
     });
   });
-  dragDropAPI(lastPiece);
+  //dragDropAPI(lastPiece);
 }
 
 startgame();
