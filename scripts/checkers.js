@@ -87,7 +87,7 @@ function movesAvailableFor(piece) {
   });
 }
 
-function checkCapture(clickedSquare, move, color,count=1) {
+function checkCapture(clickedSquare, move, color, count = 1, Captured = []) {
   let nextPieceSquare = document.getElementById(move);
   let nextPiece = nextPieceSquare?.children[0];
   if (!nextPiece) {
@@ -96,19 +96,22 @@ function checkCapture(clickedSquare, move, color,count=1) {
   let colorNextPiece = nextPiece.dataset.colorPiece;
   let initSquare = Number(clickedSquare.getAttribute("id"));
   let destSquare = Number(nextPieceSquare.getAttribute("id"));
-  if(destSquare%8 === 0 || (destSquare+1)%8 === 0){
+  if (destSquare % 8 === 0 || (destSquare + 1) % 8 === 0) {
     return;
   }
   let newDest = 2 * destSquare - initSquare;
   let FinalSquare = document.getElementById(newDest);
-  console.log(color)
+  console.log(color);
 
   console.log(initSquare + " et " + destSquare + "in" + newDest);
 
-  if(nextPiece.parentElement.style.backgroundColor === "aqua"){
+  if (nextPiece.parentElement.style.backgroundColor === "aqua") {
     return;
   }
-  if(clickedSquare.style.backgroundColor === "white" && color=== colorNextPiece){
+  if (
+    clickedSquare.style.backgroundColor === "white" &&
+    color === colorNextPiece
+  ) {
     return;
   }
 
@@ -117,21 +120,27 @@ function checkCapture(clickedSquare, move, color,count=1) {
   } else {
     if (FinalSquare.hasChildNodes()) {
       return;
-    }else{
+    } else {
       nextPiece.parentElement.style.backgroundColor = "aqua";
-      FinalSquare.style.backgroundColor = "white"
-      FinalSquare.classList.add(`capture-${count}`)
-      count++
-      const allDirections = [newDest - 7, newDest - 9,newDest + 7, newDest + 9]
+      FinalSquare.style.backgroundColor = "white";
+      FinalSquare.classList.add(`capture-${count}`);
+      Captured.push(`${nextPiece.getAttribute("id")}`)
+      count++;
+      const allDirections = [
+        newDest - 7,
+        newDest - 9,
+        newDest + 7,
+        newDest + 9,
+      ];
 
-      allDirections.forEach(direction =>{
-        if(direction%8 === 0 || (direction+1)%8 === 0){
+      allDirections.forEach((direction) => {
+        if (direction % 8 === 0 || (direction + 1) % 8 === 0 || direction < 0) {
           return;
         }
-        checkCapture(FinalSquare, direction,color,count)
-      })
+        checkCapture(FinalSquare, direction, color, count,Captured);
+      });
+      FinalSquare.dataset.capturedPieces = Captured
     }
-    
   }
 }
 
@@ -240,13 +249,34 @@ function startgame() {
   });
 
   squares.forEach((square) => {
-    square.addEventListener("click", () => {
+    square.addEventListener("click", (e) => {
       let color = square.style.backgroundColor;
 
       if (color === "green") {
         square.appendChild(activePiece);
         colorSquares();
         lastPiece = square.children[0].dataset.colorPiece;
+      }
+      let numbersCaptures = 0;
+      if (color === "white") {
+        // get all elements whose class contains "capture-"
+        const allCaptures = document.querySelectorAll('[class*="capture-"]');
+        const indices = Array.from(allCaptures).map((el) => {
+          const match = el.className.match(/capture-(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        });
+        // looking for the highest amount of captures
+        const maxI = Math.max(...indices)
+        
+        const currentMatch = e.target.className.match(/capture-(\d+)/);
+        const currentI = currentMatch ? parseInt(currentMatch[1], 10) : null;
+    
+        // 5. Execute if this is the highest
+        if (currentI === maxI) {
+          console.log(`Success! ${currentI} is the highest index.`);
+        } else {
+          console.log(`Action blocked. ${currentI} is not the highest (${maxI}).`);
+        }
       }
     });
   });
