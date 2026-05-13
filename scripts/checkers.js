@@ -51,10 +51,10 @@ setupBoard();
 4. introduce the notion of turn✅
 4.1. animation when its not your turn✅
 5. introduce the notion of forcing captures
-5.1. make sure the double capture is possible
+5.1. make sure the double capture is possible✅
 6. make the game customizable
 7. how to put new rules
-8. Add the drag and drop behavior
+8. Add the drag and drop behavior⌛
 */
 
 function movesAvailableFor(piece) {
@@ -100,10 +100,14 @@ function checkCapture(clickedSquare, move, color, count = 1, Captured = []) {
     return;
   }
   let newDest = 2 * destSquare - initSquare;
+  if (newDest > 64 && newDest < 0) {
+    return;
+  }
+  console.log(newDest)
   let FinalSquare = document.getElementById(newDest);
-  console.log(color);
-
-  console.log(initSquare + " et " + destSquare + "in" + newDest);
+  if (!FinalSquare) {
+    return;
+  }
 
   if (nextPiece.parentElement.style.backgroundColor === "aqua") {
     return;
@@ -124,7 +128,7 @@ function checkCapture(clickedSquare, move, color, count = 1, Captured = []) {
       nextPiece.parentElement.style.backgroundColor = "aqua";
       FinalSquare.style.backgroundColor = "white";
       FinalSquare.classList.add(`capture-${count}`);
-      Captured.push(`${nextPiece.getAttribute("id")}`)
+      Captured.push(`${nextPiece.getAttribute("id")}`);
       count++;
       const allDirections = [
         newDest - 7,
@@ -137,9 +141,9 @@ function checkCapture(clickedSquare, move, color, count = 1, Captured = []) {
         if (direction % 8 === 0 || (direction + 1) % 8 === 0 || direction < 0) {
           return;
         }
-        checkCapture(FinalSquare, direction, color, count,Captured);
+        checkCapture(FinalSquare, direction, color, count, Captured);
       });
-      FinalSquare.dataset.capturedPieces = Captured
+      FinalSquare.dataset.capturedPieces = Captured;
     }
   }
 }
@@ -162,7 +166,6 @@ function dragDropAPI(lastPiece) {
           e.currentTarget.classList.add("over-bad");
         }
         let color = square.style.backgroundColor;
-        console.log(color);
         if (color === "green") {
           e.currentTarget.classList.add("over-good");
         }
@@ -266,16 +269,31 @@ function startgame() {
           return match ? parseInt(match[1], 10) : 0;
         });
         // looking for the highest amount of captures
-        const maxI = Math.max(...indices)
-        
+        const maxI = Math.max(...indices);
+
         const currentMatch = e.target.className.match(/capture-(\d+)/);
         const currentI = currentMatch ? parseInt(currentMatch[1], 10) : null;
-    
+
         // 5. Execute if this is the highest
         if (currentI === maxI) {
           console.log(`Success! ${currentI} is the highest index.`);
+          const capturedPieces = (square.dataset.capturedPieces).split(",")
+          capturedPieces.forEach(Id =>{
+            const captured = document.getElementById(Id)
+            captured.remove()
+          })
+          square.appendChild(activePiece)
+          colorSquares()
+          lastPiece = square.children[0].dataset.colorPiece;
+
+          Array.from(allCaptures).forEach(captures=>{
+            captures.classList.remove(/capture-(\d+)/)
+          })
         } else {
-          console.log(`Action blocked. ${currentI} is not the highest (${maxI}).`);
+          // todo: add animation when its not the highest
+          console.log(
+            `Action blocked. ${currentI} is not the highest (${maxI}).`,
+          );
         }
       }
     });
