@@ -33,15 +33,74 @@ function setupBoard() {
   colorSquares();
   squares.forEach((square, i) => {
     if (square.style.backgroundColor === "rgb(77, 42, 0)") {
-      if (i < 24 || i >= 40) {
+      if (i < 29 || i >= 55) {
+        // normallement il ya i < 24 ||i >= 40
         square.innerHTML = `<div class='piece' ${i >= 40 ? `style="background-color: #fff" data-color-piece="white"` : 'data-color-piece="black"'} id="piece${i}" draggable="true"></div>`;
       }
     }
   });
 }
-setupBoard();
 
-/* todo:
+/**
+ * this function helps add infinite moves in the kings pieces
+ * that successfully achieved the opponent's side
+ */
+function infiniteMoves(position) {
+  let moves = [];
+  let countA = position;
+  while (countA > 6) {
+    moves.push(countA - 7);
+    countA -= 7;
+    let selectedSquare = document.getElementById(countA);
+    if (selectedSquare.hasChildNodes()) {
+      break;
+    }
+    if ((countA + 1) % 8 === 0) {
+      break;
+    }
+  }
+  let countB = position;
+  while (countB > 8) {
+    moves.push(countB - 9);
+    countB -= 9;
+    let selectedSquare = document.getElementById(countB);
+    if (selectedSquare.hasChildNodes()) {
+      break;
+    }
+    if (countB % 8 === 0) {
+      break;
+    }
+  }
+  let countC = position;
+  while (countC < 55) {
+    moves.push(countC + 9);
+    countC += 9;
+    let selectedSquare = document.getElementById(countC);
+    if (selectedSquare.hasChildNodes()) {
+      break;
+    }
+    if ((countA + 1) % 8 === 0) {
+      break;
+    }
+  }
+  let countD = position;
+  while (countD < 57) {
+    moves.push(countD + 7);
+    countD += 7;
+    let selectedSquare = document.getElementById(countD);
+    if (selectedSquare.hasChildNodes()) {
+      break;
+    }
+    if (countD % 8 === 0) {
+      break;
+    }
+  }
+
+  return moves;
+}
+setupBoard();
+infiniteMoves();
+/* TODO:
 1. introduce a click to each piece ✅
 2. highlight the moves available✅
 2.1. a little animation when illegal move
@@ -50,7 +109,7 @@ setupBoard();
 3. move the right piece when clicking to the highlighted square✅
 4. introduce the notion of turn✅
 4.1. animation when its not your turn✅
-5. introduce the notion of forcing captures
+5. introduce the notion of forcing captures✅
 5.1. make sure the double capture is possible✅
 6. make the game customizable
 7. how to put new rules
@@ -63,9 +122,9 @@ function movesAvailableFor(piece) {
 
   let { colorPiece } = piece.dataset;
 
-  if (colorPiece === "black") {
+  if (colorPiece === "black" && position < 55) {
     moves = [position + 7, position + 9];
-  } else {
+  } else if (colorPiece === "white" && position > 0) {
     moves = [position - 9, position - 7];
   }
 
@@ -75,37 +134,135 @@ function movesAvailableFor(piece) {
   if ((position + 1) % 8 === 0) {
     moves.pop();
   }
+  // Adding the infinite moves when arriving in the opponent side
+  if (
+    (colorPiece === "black" && position > 55) ||
+    (colorPiece === "white" && position < 8)
+  ) {
+    piece.classList.add("king");
+  }
   colorSquares();
 
-  moves.forEach((moving) => {
-    let square = document.getElementById(moving);
-    if (square.hasChildNodes()) {
-      checkCapture(piece.parentElement, moving, colorPiece);
-    } else {
-      square.style.backgroundColor = "green";
-    }
-  });
+  if (Array.from(piece.classList).includes("king")) {
+    moves = infiniteMoves(position);
+    moves.forEach((move) => {
+      let square = document.getElementById(move);
+      if (square.hasChildNodes()) {
+        checkCaptureKing(piece.parentElement, move, colorPiece, 1);
+      } else {
+        square.style.backgroundColor = "green";
+      }
+    });
+  } else {
+    moves.forEach((moving) => {
+      let square = document.getElementById(moving);
+      if (square.hasChildNodes()) {
+        checkCapture(piece.parentElement, moving, colorPiece);
+      } else {
+        square.style.backgroundColor = "green";
+      }
+    });
+  }
 }
 
-function checkCapture(clickedSquare, move, color, count = 1, Captured = []) {
-  let nextPieceSquare = document.getElementById(move);
-  let nextPiece = nextPieceSquare?.children[0];
+function checkCaptureKing(clickedSquare, nowSquare, color, count = 1) {
+  /* check if the next square has a piece*/
+  let pieceSquare = document.getElementById(nowSquare);
+  let nextPiece = pieceSquare?.children[0];
   if (!nextPiece) {
     return;
   }
+  /* get the color of the piece */
   let colorNextPiece = nextPiece.dataset.colorPiece;
+
+  /* remove captures on the rim of the board */
   let initSquare = Number(clickedSquare.getAttribute("id"));
-  let destSquare = Number(nextPieceSquare.getAttribute("id"));
+  let destSquare = Number(pieceSquare.getAttribute("id"));
   if (destSquare % 8 === 0 || (destSquare + 1) % 8 === 0) {
+    pieceSquare.style.backgroundColor = "red";
     return;
   }
+  /* not the same color */
+  if (color === colorNextPiece) {
+    pieceSquare.style.backgroundColor = "red";
+    return;
+  }
+
+  /* get the direction of the move */
+  let direction = destSquare - initSquare;
+
+  let sens =
+    direction % 7 === 0 ? (direction > 0 ? 7 : -7) : direction > 0 ? 9 : -9;
+
+  /*check if the next case is empty */
+  let nextSquare = document.getElementById(nowSquare + sens);
+  if (nextSquare.hasChildNodes()) {
+    pieceSquare.style.backgroundColor = "red";
+    return;
+  } else {
+    pieceSquare.style.backgroundColor = "aqua";
+  }
+  /* color the next cases */
+  /* first direction */
+  while (
+    (destSquare + 1) % 8 !== 0 &&
+    destSquare < 63 &&
+    ((direction % 7 === 0 && direction > 0) ||
+      (direction % 9 === 0 && direction < 0))
+  ) {
+    destSquare += sens;
+    let finalSquare = document.getElementById(destSquare);
+    finalSquare.style.backgroundColor = "white";
+    finalSquare.classList.add(`capture-${count}`);
+    if (finalSquare.hasChildNodes()) {
+      checkCaptureKing(finalSquare, destSquare, color);
+      break;
+    }
+  }
+  /* second direction */
+  while (
+    destSquare % 8 !== 0 &&
+    destSquare < 63 &&
+    ((direction % 7 === 0 && direction < 0) ||
+      (direction % 9 === 0 && direction > 0))
+  ) {
+    destSquare += sens;
+    let finalSquare = document.getElementById(destSquare);
+    finalSquare.style.backgroundColor = "white";
+    finalSquare.classList.add(`capture-${count}`);
+    if (finalSquare.hasChildNodes()) {
+      checkCaptureKing(finalSquare, destSquare, color);
+      break;
+    }
+  }
+  /* */
+  console.log("finished");
+}
+
+function checkCapture(clickedSquare, move, color, count = 1, Captured = []) {
+  /* check if the next square has a piece*/
+  let pieceSquare = document.getElementById(move);
+  let nextPiece = pieceSquare?.children[0];
+  if (!nextPiece) {
+    return;
+  }
+  /* get the color of the piece */
+  let colorNextPiece = nextPiece.dataset.colorPiece;
+
+  /* remove captures on the rim of the board */
+  let initSquare = Number(clickedSquare.getAttribute("id"));
+  let destSquare = Number(pieceSquare.getAttribute("id"));
+  if (destSquare % 8 === 0 || (destSquare + 1) % 8 === 0) {
+    pieceSquare.style.backgroundColor = "red";
+    return;
+  }
+  /* getting the new square */
   let newDest = 2 * destSquare - initSquare;
-  if (newDest > 64 && newDest < 0) {
+  if (newDest > 63 || newDest < 0) {
     return;
   }
-  console.log(newDest)
-  let FinalSquare = document.getElementById(newDest);
-  if (!FinalSquare) {
+  let finalSquare = document.getElementById(newDest);
+  if (!finalSquare) {
     return;
   }
 
@@ -122,13 +279,20 @@ function checkCapture(clickedSquare, move, color, count = 1, Captured = []) {
   if (color === colorNextPiece) {
     nextPiece.parentElement.style.backgroundColor = "red";
   } else {
-    if (FinalSquare.hasChildNodes()) {
+    if (finalSquare.hasChildNodes()) {
       return;
     } else {
       nextPiece.parentElement.style.backgroundColor = "aqua";
-      FinalSquare.style.backgroundColor = "white";
-      FinalSquare.classList.add(`capture-${count}`);
-      Captured.push(`${nextPiece.getAttribute("id")}`);
+      finalSquare.style.backgroundColor = "white";
+      finalSquare.classList.add(`capture-${count}`);
+      if (count === 1) {
+        Captured.push(`${nextPiece.getAttribute("id")}`);
+        finalSquare.dataset.capturedPieces = Captured;
+      } else {
+        Captured = clickedSquare.dataset.capturedPieces.split(",");
+        Captured.push(`${nextPiece.getAttribute("id")}`);
+        finalSquare.dataset.capturedPieces = Captured;
+      }
       count++;
       const allDirections = [
         newDest - 7,
@@ -141,15 +305,18 @@ function checkCapture(clickedSquare, move, color, count = 1, Captured = []) {
         if (direction % 8 === 0 || (direction + 1) % 8 === 0 || direction < 0) {
           return;
         }
-        checkCapture(FinalSquare, direction, color, count, Captured);
+        checkCapture(finalSquare, direction, color, count, Captured);
       });
-      FinalSquare.dataset.capturedPieces = Captured;
     }
   }
 }
 
 // Adding the drag and drop API to pieces
-
+// TODO: restrict the draggability if its not your turn
+// the idea was simply that if the square was the right square
+// it will be highlighted in green and red otherwise
+// FIXME: failed to correct the highlighting process
+// FIXME: failed to remove the draggability when its not your turn
 function dragDropAPI(lastPiece) {
   // todo: to introduce the notion of turn with the drag and drop API
   let squares = document.querySelectorAll(".square");
@@ -254,16 +421,25 @@ function startgame() {
   squares.forEach((square) => {
     square.addEventListener("click", (e) => {
       let color = square.style.backgroundColor;
+      // get all elements whose class contains "capture-"
+      const allCaptures = document.querySelectorAll('[class*="capture-"]');
 
-      if (color === "green") {
+      if (color === "green" && Array.from(allCaptures).length === 0) {
         square.appendChild(activePiece);
         colorSquares();
         lastPiece = square.children[0].dataset.colorPiece;
+        return;
+      }
+      if (color === "green") {
+        activePiece.style.animation = "notMe .5s ease-in-out";
+        activePiece.onanimationend = () => {
+          activePiece.style.animation = "";
+        };
+
+        alert("there is a crucial capture you missed");
       }
       let numbersCaptures = 0;
       if (color === "white") {
-        // get all elements whose class contains "capture-"
-        const allCaptures = document.querySelectorAll('[class*="capture-"]');
         const indices = Array.from(allCaptures).map((el) => {
           const match = el.className.match(/capture-(\d+)/);
           return match ? parseInt(match[1], 10) : 0;
@@ -276,24 +452,27 @@ function startgame() {
 
         // 5. Execute if this is the highest
         if (currentI === maxI) {
-          console.log(`Success! ${currentI} is the highest index.`);
-          const capturedPieces = (square.dataset.capturedPieces).split(",")
-          capturedPieces.forEach(Id =>{
-            const captured = document.getElementById(Id)
-            captured.remove()
-          })
-          square.appendChild(activePiece)
-          colorSquares()
+          const capturedPieces = square.dataset.capturedPieces.split(",");
+          capturedPieces.forEach((Id) => {
+            const captured = document.getElementById(Id);
+            captured.remove();
+          });
+          square.appendChild(activePiece);
+          colorSquares();
           lastPiece = square.children[0].dataset.colorPiece;
 
-          Array.from(allCaptures).forEach(captures=>{
-            captures.classList.remove(/capture-(\d+)/)
-          })
+          Array.from(allCaptures).forEach((divs) => {
+            let captureClass = Array.from(divs.classList).filter((className) =>
+              className.includes("capture-"),
+            );
+            divs.classList.remove(captureClass[0]);
+          });
         } else {
-          // todo: add animation when its not the highest
-          console.log(
-            `Action blocked. ${currentI} is not the highest (${maxI}).`,
-          );
+          activePiece.style.animation = "notMe .5s ease-in-out";
+          activePiece.onanimationend = () => {
+            activePiece.style.animation = "";
+          };
+          alert("this is not the highest possible");
         }
       }
     });
