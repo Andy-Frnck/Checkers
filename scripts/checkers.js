@@ -33,7 +33,7 @@ function setupBoard() {
   colorSquares();
   squares.forEach((square, i) => {
     if (square.style.backgroundColor === "rgb(77, 42, 0)") {
-      if (i < 29 || i >= 55) {
+      if (i < 10 || i >= 40) {
         // normallement il ya i < 24 ||i >= 40
         square.innerHTML = `<div class='piece' ${i >= 40 ? `style="background-color: #fff" data-color-piece="white"` : 'data-color-piece="black"'} id="piece${i}" draggable="true"></div>`;
       }
@@ -45,54 +45,66 @@ function setupBoard() {
  * this function helps add infinite moves in the kings pieces
  * that successfully achieved the opponent's side
  */
-function infiniteMoves(position) {
+function infiniteMoves(position, direction = [7, 9], sens = "-+") {
   let moves = [];
-  let countA = position;
-  while (countA > 6) {
-    moves.push(countA - 7);
-    countA -= 7;
-    let selectedSquare = document.getElementById(countA);
-    if (selectedSquare.hasChildNodes()) {
-      break;
+  if (direction.includes(7)) {
+    if (sens.includes("-")) {
+      let countA = position;
+      while (countA > 6) {
+        moves.push(countA - 7);
+        countA -= 7;
+        let selectedSquare = document.getElementById(countA);
+        if (selectedSquare.hasChildNodes()) {
+          break;
+        }
+        if ((countA + 1) % 8 === 0) {
+          break;
+        }
+      }
     }
-    if ((countA + 1) % 8 === 0) {
-      break;
-    }
-  }
-  let countB = position;
-  while (countB > 8) {
-    moves.push(countB - 9);
-    countB -= 9;
-    let selectedSquare = document.getElementById(countB);
-    if (selectedSquare.hasChildNodes()) {
-      break;
-    }
-    if (countB % 8 === 0) {
-      break;
-    }
-  }
-  let countC = position;
-  while (countC < 55) {
-    moves.push(countC + 9);
-    countC += 9;
-    let selectedSquare = document.getElementById(countC);
-    if (selectedSquare.hasChildNodes()) {
-      break;
-    }
-    if ((countA + 1) % 8 === 0) {
-      break;
+    if (sens.includes("+")) {
+      let countD = position;
+      while (countD < 57) {
+        moves.push(countD + 7);
+        countD += 7;
+        let selectedSquare = document.getElementById(countD);
+        if (selectedSquare.hasChildNodes()) {
+          break;
+        }
+        if (countD % 8 === 0) {
+          break;
+        }
+      }
     }
   }
-  let countD = position;
-  while (countD < 57) {
-    moves.push(countD + 7);
-    countD += 7;
-    let selectedSquare = document.getElementById(countD);
-    if (selectedSquare.hasChildNodes()) {
-      break;
+  if (direction.includes(9)) {
+    if (sens.includes("-")) {
+      let countB = position;
+      while (countB > 8) {
+        moves.push(countB - 9);
+        countB -= 9;
+        let selectedSquare = document.getElementById(countB);
+        if (selectedSquare.hasChildNodes()) {
+          break;
+        }
+        if (countB % 8 === 0) {
+          break;
+        }
+      }
     }
-    if (countD % 8 === 0) {
-      break;
+    if (sens.includes("+")) {
+      let countC = position;
+      while (countC < 55) {
+        moves.push(countC + 9);
+        countC += 9;
+        let selectedSquare = document.getElementById(countC);
+        if (selectedSquare.hasChildNodes()) {
+          break;
+        }
+        if ((countC + 1) % 8 === 0) {
+          break;
+        }
+      }
     }
   }
 
@@ -108,9 +120,10 @@ infiniteMoves();
 2.3. showing moves individually for each piece clicked✅
 3. move the right piece when clicking to the highlighted square✅
 4. introduce the notion of turn✅
-4.1. animation when its not your turn✅
+4.1. animation when its not your turn ✅
 5. introduce the notion of forcing captures✅
 5.1. make sure the double capture is possible✅
+5.2. make sure the king capture is possible ✅
 6. make the game customizable
 7. how to put new rules
 8. Add the drag and drop behavior⌛
@@ -165,9 +178,9 @@ function movesAvailableFor(piece) {
   }
 }
 
-function checkCaptureKing(clickedSquare, nowSquare, color, count = 1) {
+function checkCaptureKing(clickedSquare, idNowSquare, color, count = 1) {
   /* check if the next square has a piece*/
-  let pieceSquare = document.getElementById(nowSquare);
+  let pieceSquare = document.getElementById(idNowSquare);
   let nextPiece = pieceSquare?.children[0];
   if (!nextPiece) {
     return;
@@ -179,12 +192,16 @@ function checkCaptureKing(clickedSquare, nowSquare, color, count = 1) {
   let initSquare = Number(clickedSquare.getAttribute("id"));
   let destSquare = Number(pieceSquare.getAttribute("id"));
   if (destSquare % 8 === 0 || (destSquare + 1) % 8 === 0) {
-    pieceSquare.style.backgroundColor = "red";
+    if (count === 1) {
+      pieceSquare.style.backgroundColor = "red";
+    }
     return;
   }
   /* not the same color */
   if (color === colorNextPiece) {
-    pieceSquare.style.backgroundColor = "red";
+    if (count === 1) {
+      pieceSquare.style.backgroundColor = "red";
+    }
     return;
   }
 
@@ -195,48 +212,118 @@ function checkCaptureKing(clickedSquare, nowSquare, color, count = 1) {
     direction % 7 === 0 ? (direction > 0 ? 7 : -7) : direction > 0 ? 9 : -9;
 
   /*check if the next case is empty */
-  let nextSquare = document.getElementById(nowSquare + sens);
+  let nextSquare = document.getElementById(idNowSquare + sens);
   if (nextSquare.hasChildNodes()) {
-    pieceSquare.style.backgroundColor = "red";
+    if (count === 1) {
+      pieceSquare.style.backgroundColor = "red";
+    }
     return;
   } else {
     pieceSquare.style.backgroundColor = "aqua";
   }
+  /* color the square on the second count */
+  let idFirstSquare = Number(clickedSquare.getAttribute("id"));
+  console.log(idFirstSquare);
+  let idSecondSquare = idNowSquare;
+  console.log(idSecondSquare);
+  let difference =
+    idFirstSquare > idSecondSquare
+      ? idFirstSquare - idSecondSquare
+      : idSecondSquare - idFirstSquare;
+  if (count > 1 && difference > 7) {
+    let sens =
+      (idSecondSquare - idFirstSquare) % 7 === 0
+        ? idSecondSquare - idFirstSquare > 0
+          ? 7
+          : -7
+        : idSecondSquare - idFirstSquare > 0
+          ? 9
+          : -9;
+
+    /* track the original square */
+    let idTrackerSquare = idFirstSquare;
+    while (idTrackerSquare !== idSecondSquare) {
+      let trackerSquare = document.getElementById(idTrackerSquare);
+      trackerSquare.style.backgroundColor = "white";
+      idTrackerSquare += sens;
+    }
+  }
+
   /* color the next cases */
   /* first direction */
   while (
-    (destSquare + 1) % 8 !== 0 &&
+    destSquare % 8 !== 0 &&
     destSquare < 63 &&
     ((direction % 7 === 0 && direction > 0) ||
       (direction % 9 === 0 && direction < 0))
   ) {
     destSquare += sens;
     let finalSquare = document.getElementById(destSquare);
+    if (!finalSquare) {
+      return;
+    }
     finalSquare.style.backgroundColor = "white";
     finalSquare.classList.add(`capture-${count}`);
     if (finalSquare.hasChildNodes()) {
       checkCaptureKing(finalSquare, destSquare, color);
       break;
     }
+    let newDirection = sens % 7 === 0 ? [9] : [7];
+    let movesArray = infiniteMoves(destSquare, newDirection, "+");
+    console.log(movesArray);
+    movesArray.forEach((move) => {
+      let squareTarget = document.getElementById(move);
+      if (squareTarget.hasChildNodes()) {
+        count++;
+        console.log(count);
+        checkCaptureKing(finalSquare, move, color, count);
+      }
+    });
+    movesArray = infiniteMoves(destSquare, newDirection, "-");
+    movesArray.forEach((move) => {
+      let squareTarget = document.getElementById(move);
+      if (squareTarget.hasChildNodes()) {
+        count++;
+        checkCaptureKing(finalSquare, move, color, count);
+      }
+    });
   }
   /* second direction */
   while (
-    destSquare % 8 !== 0 &&
+    (destSquare + 1) % 8 !== 0 &&
     destSquare < 63 &&
     ((direction % 7 === 0 && direction < 0) ||
       (direction % 9 === 0 && direction > 0))
   ) {
     destSquare += sens;
     let finalSquare = document.getElementById(destSquare);
+    if (!finalSquare) {
+      break;
+    }
     finalSquare.style.backgroundColor = "white";
     finalSquare.classList.add(`capture-${count}`);
     if (finalSquare.hasChildNodes()) {
       checkCaptureKing(finalSquare, destSquare, color);
       break;
     }
+    let newDirection = sens % 7 === 0 ? [9] : [7];
+    let movesArray = infiniteMoves(destSquare, newDirection, "+");
+    movesArray.forEach((move) => {
+      let squareTarget = document.getElementById(move);
+      if (squareTarget.hasChildNodes()) {
+        count++;
+        checkCaptureKing(finalSquare, move, color, count);
+      }
+    });
+    movesArray = infiniteMoves(destSquare, newDirection, "-");
+    movesArray.forEach((move) => {
+      let squareTarget = document.getElementById(move);
+      if (squareTarget.hasChildNodes()) {
+        count++;
+        checkCaptureKing(finalSquare, squareTarget, color, count);
+      }
+    });
   }
-  /* */
-  console.log("finished");
 }
 
 function checkCapture(clickedSquare, move, color, count = 1, Captured = []) {
