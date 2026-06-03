@@ -51,13 +51,13 @@ function infiniteMoves(position, direction = [7, 9], sens = "-+") {
     if (sens.includes("-")) {
       let countA = position;
       while (countA > 6) {
+        if ((countA + 1) % 8 === 0) {
+          break;
+        }
         moves.push(countA - 7);
         countA -= 7;
         let selectedSquare = document.getElementById(countA);
         if (selectedSquare.hasChildNodes()) {
-          break;
-        }
-        if ((countA + 1) % 8 === 0) {
           break;
         }
       }
@@ -65,13 +65,13 @@ function infiniteMoves(position, direction = [7, 9], sens = "-+") {
     if (sens.includes("+")) {
       let countD = position;
       while (countD < 57) {
+        if (countD % 8 === 0) {
+          break;
+        }
         moves.push(countD + 7);
         countD += 7;
         let selectedSquare = document.getElementById(countD);
         if (selectedSquare.hasChildNodes()) {
-          break;
-        }
-        if (countD % 8 === 0) {
           break;
         }
       }
@@ -81,13 +81,13 @@ function infiniteMoves(position, direction = [7, 9], sens = "-+") {
     if (sens.includes("-")) {
       let countB = position;
       while (countB > 8) {
+        if (countB % 8 === 0) {
+          break;
+        }
         moves.push(countB - 9);
         countB -= 9;
         let selectedSquare = document.getElementById(countB);
         if (selectedSquare.hasChildNodes()) {
-          break;
-        }
-        if (countB % 8 === 0) {
           break;
         }
       }
@@ -95,13 +95,13 @@ function infiniteMoves(position, direction = [7, 9], sens = "-+") {
     if (sens.includes("+")) {
       let countC = position;
       while (countC < 55) {
+        if ((countC + 1) % 8 === 0) {
+          break;
+        }
         moves.push(countC + 9);
         countC += 9;
         let selectedSquare = document.getElementById(countC);
         if (selectedSquare.hasChildNodes()) {
-          break;
-        }
-        if ((countC + 1) % 8 === 0) {
           break;
         }
       }
@@ -161,7 +161,7 @@ function movesAvailableFor(piece) {
     moves.forEach((move) => {
       let square = document.getElementById(move);
       if (square.hasChildNodes()) {
-        checkCaptureKing(piece.parentElement, move, colorPiece, 1);
+        checkCaptureKing(piece.parentElement, move, colorPiece);
       } else {
         square.style.backgroundColor = "green";
       }
@@ -178,7 +178,13 @@ function movesAvailableFor(piece) {
   }
 }
 
-function checkCaptureKing(clickedSquare, idNowSquare, color, count = 1) {
+function checkCaptureKing(
+  clickedSquare,
+  idNowSquare,
+  color,
+  count = 0,
+  Captured = [],
+) {
   /* check if the next square has a piece*/
   let pieceSquare = document.getElementById(idNowSquare);
   let nextPiece = pieceSquare?.children[0];
@@ -192,15 +198,19 @@ function checkCaptureKing(clickedSquare, idNowSquare, color, count = 1) {
   let initSquare = Number(clickedSquare.getAttribute("id"));
   let destSquare = Number(pieceSquare.getAttribute("id"));
   if (destSquare % 8 === 0 || (destSquare + 1) % 8 === 0) {
-    if (count === 1) {
+    if (count === 0) {
       pieceSquare.style.backgroundColor = "red";
+    }else{
+      pieceSquare.style.backgroundColor = "#4d2a00"
     }
     return;
   }
   /* not the same color */
   if (color === colorNextPiece) {
-    if (count === 1) {
+    if (count === 0) {
       pieceSquare.style.backgroundColor = "red";
+    }else{
+      pieceSquare.style.backgroundColor = "#4d2a00"
     }
     return;
   }
@@ -214,18 +224,19 @@ function checkCaptureKing(clickedSquare, idNowSquare, color, count = 1) {
   /*check if the next case is empty */
   let nextSquare = document.getElementById(idNowSquare + sens);
   if (nextSquare.hasChildNodes()) {
-    if (count === 1) {
+    if (count === 0) {
       pieceSquare.style.backgroundColor = "red";
+    }else{
+      pieceSquare.style.backgroundColor = "#4d2a00"
     }
     return;
   } else {
     pieceSquare.style.backgroundColor = "aqua";
+    count = Captured.length === 0 ? 1 : count++;
   }
   /* color the square on the second count */
   let idFirstSquare = Number(clickedSquare.getAttribute("id"));
-  console.log(idFirstSquare);
   let idSecondSquare = idNowSquare;
-  console.log(idSecondSquare);
   let difference =
     idFirstSquare > idSecondSquare
       ? idFirstSquare - idSecondSquare
@@ -264,27 +275,48 @@ function checkCaptureKing(clickedSquare, idNowSquare, color, count = 1) {
     }
     finalSquare.style.backgroundColor = "white";
     finalSquare.classList.add(`capture-${count}`);
+    if (count === 1) {
+      if (!Captured.includes(`${nextPiece.getAttribute("id")}`)) {
+        Captured.push(`${nextPiece.getAttribute("id")}`);
+      }
+      finalSquare.dataset.capturedPieces = Captured;
+    } else {
+      Captured = clickedSquare.dataset.capturedPieces.split(",");
+      if (!Captured.includes(`${nextPiece.getAttribute("id")}`)) {
+        Captured.push(`${nextPiece.getAttribute("id")}`);
+      }
+      console.log(Captured);
+      finalSquare.dataset.capturedPieces = Captured;
+    }
     if (finalSquare.hasChildNodes()) {
-      checkCaptureKing(finalSquare, destSquare, color);
+      checkCaptureKing(finalSquare, destSquare, color,count,Captured);
       break;
     }
     let newDirection = sens % 7 === 0 ? [9] : [7];
     let movesArray = infiniteMoves(destSquare, newDirection, "+");
-    console.log(movesArray);
     movesArray.forEach((move) => {
       let squareTarget = document.getElementById(move);
       if (squareTarget.hasChildNodes()) {
-        count++;
-        console.log(count);
-        checkCaptureKing(finalSquare, move, color, count);
+        checkCaptureKing(
+          finalSquare,
+          move,
+          color,
+          count,
+          Captured,
+        );
       }
     });
     movesArray = infiniteMoves(destSquare, newDirection, "-");
     movesArray.forEach((move) => {
       let squareTarget = document.getElementById(move);
       if (squareTarget.hasChildNodes()) {
-        count++;
-        checkCaptureKing(finalSquare, move, color, count);
+        checkCaptureKing(
+          finalSquare,
+          move,
+          color,
+          count,
+          Captured,
+        );
       }
     });
   }
@@ -302,27 +334,55 @@ function checkCaptureKing(clickedSquare, idNowSquare, color, count = 1) {
     }
     finalSquare.style.backgroundColor = "white";
     finalSquare.classList.add(`capture-${count}`);
+    /* capturing process */
+    if (count === 1) {
+      if (!Captured.includes(`${nextPiece.getAttribute("id")}`)) {
+        Captured.push(`${nextPiece.getAttribute("id")}`);
+      }
+      finalSquare.dataset.capturedPieces = Captured;
+    } else {
+      Captured = clickedSquare.dataset.capturedPieces.split(",");
+      if (!Captured.includes(`${nextPiece.getAttribute("id")}`)) {
+        Captured.push(`${nextPiece.getAttribute("id")}`);
+      }
+      finalSquare.dataset.capturedPieces = Captured;
+    }
+    /* second capturing process */
     if (finalSquare.hasChildNodes()) {
-      checkCaptureKing(finalSquare, destSquare, color);
+      checkCaptureKing(finalSquare, destSquare, color,count,Captured);
       break;
     }
     let newDirection = sens % 7 === 0 ? [9] : [7];
     let movesArray = infiniteMoves(destSquare, newDirection, "+");
-    movesArray.forEach((move) => {
-      let squareTarget = document.getElementById(move);
-      if (squareTarget.hasChildNodes()) {
-        count++;
-        checkCaptureKing(finalSquare, move, color, count);
-      }
-    });
+    if (destSquare < 55) {
+      movesArray.forEach((move) => {
+        let squareTarget = document.getElementById(move);
+        if (squareTarget.hasChildNodes()) {
+          checkCaptureKing(
+            finalSquare,
+            move,
+            color,
+            count,
+            Captured,
+          );
+        }
+      });
+    }
     movesArray = infiniteMoves(destSquare, newDirection, "-");
-    movesArray.forEach((move) => {
-      let squareTarget = document.getElementById(move);
-      if (squareTarget.hasChildNodes()) {
-        count++;
-        checkCaptureKing(finalSquare, squareTarget, color, count);
-      }
-    });
+    if (destSquare >= 8) {
+      movesArray.forEach((move) => {
+        let squareTarget = document.getElementById(move);
+        if (squareTarget.hasChildNodes()) {
+          checkCaptureKing(
+            finalSquare,
+            move,
+            color,
+            count,
+            Captured,
+          );
+        }
+      });
+    }
   }
 }
 
