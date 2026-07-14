@@ -33,8 +33,7 @@ function setupBoard() {
   colorSquares();
   squares.forEach((square, i) => {
     if (square.style.backgroundColor === "rgb(77, 42, 0)") {
-      if (i < 10 || i >= 40) {
-        // normallement il ya i < 24 ||i >= 40
+      if (i < 24 || i >= 40) {
         square.innerHTML = `<div class='piece' ${i >= 40 ? `style="background-color: #fff" data-color-piece="white"` : 'data-color-piece="black"'} id="piece${i}" draggable="true"></div>`;
       }
     }
@@ -111,23 +110,6 @@ function infiniteMoves(position, direction = [7, 9], sens = "-+") {
   return moves;
 }
 setupBoard();
-infiniteMoves();
-/* TODO:
-1. introduce a click to each piece ✅
-2. highlight the moves available✅
-2.1. a little animation when illegal move
-2.2. exception for edge pieces✅
-2.3. showing moves individually for each piece clicked✅
-3. move the right piece when clicking to the highlighted square✅
-4. introduce the notion of turn✅
-4.1. animation when its not your turn ✅
-5. introduce the notion of forcing captures✅
-5.1. make sure the double capture is possible✅
-5.2. make sure the king capture is possible ✅
-6. make the game customizable
-7. how to put new rules
-8. Add the drag and drop behavior⌛
-*/
 
 function movesAvailableFor(piece) {
   let moves = [];
@@ -200,8 +182,8 @@ function checkCaptureKing(
   if (destSquare % 8 === 0 || (destSquare + 1) % 8 === 0) {
     if (count === 0) {
       pieceSquare.style.backgroundColor = "red";
-    }else{
-      pieceSquare.style.backgroundColor = "#4d2a00"
+    } else {
+      pieceSquare.style.backgroundColor = "#4d2a00";
     }
     return;
   }
@@ -209,8 +191,8 @@ function checkCaptureKing(
   if (color === colorNextPiece) {
     if (count === 0) {
       pieceSquare.style.backgroundColor = "red";
-    }else{
-      pieceSquare.style.backgroundColor = "#4d2a00"
+    } else {
+      pieceSquare.style.backgroundColor = "#4d2a00";
     }
     return;
   }
@@ -226,28 +208,25 @@ function checkCaptureKing(
   if (nextSquare.hasChildNodes()) {
     if (count === 0) {
       pieceSquare.style.backgroundColor = "red";
-    }else{
-      pieceSquare.style.backgroundColor = "#4d2a00"
+    } else {
+      pieceSquare.style.backgroundColor = "#4d2a00";
     }
     return;
   } else {
     pieceSquare.style.backgroundColor = "aqua";
-    count = Captured.length === 0 ? 1 : count++;
+    count = Captured.length + 1;
   }
   /* color the square on the second count */
   let idFirstSquare = Number(clickedSquare.getAttribute("id"));
   let idSecondSquare = idNowSquare;
-  let difference =
-    idFirstSquare > idSecondSquare
-      ? idFirstSquare - idSecondSquare
-      : idSecondSquare - idFirstSquare;
-  if (count > 1 && difference > 7) {
+  let difference = idFirstSquare - idSecondSquare;
+  if (count >= 1 && difference >= 10) {
     let sens =
-      (idSecondSquare - idFirstSquare) % 7 === 0
-        ? idSecondSquare - idFirstSquare > 0
+      difference % 7 === 0
+        ? difference > 0
           ? 7
           : -7
-        : idSecondSquare - idFirstSquare > 0
+        : difference > 0
           ? 9
           : -9;
 
@@ -285,11 +264,10 @@ function checkCaptureKing(
       if (!Captured.includes(`${nextPiece.getAttribute("id")}`)) {
         Captured.push(`${nextPiece.getAttribute("id")}`);
       }
-      console.log(Captured);
       finalSquare.dataset.capturedPieces = Captured;
     }
     if (finalSquare.hasChildNodes()) {
-      checkCaptureKing(finalSquare, destSquare, color,count,Captured);
+      checkCaptureKing(finalSquare, destSquare, color, count, Captured);
       break;
     }
     let newDirection = sens % 7 === 0 ? [9] : [7];
@@ -297,26 +275,14 @@ function checkCaptureKing(
     movesArray.forEach((move) => {
       let squareTarget = document.getElementById(move);
       if (squareTarget.hasChildNodes()) {
-        checkCaptureKing(
-          finalSquare,
-          move,
-          color,
-          count,
-          Captured,
-        );
+        checkCaptureKing(finalSquare, move, color, count, Captured);
       }
     });
     movesArray = infiniteMoves(destSquare, newDirection, "-");
     movesArray.forEach((move) => {
       let squareTarget = document.getElementById(move);
       if (squareTarget.hasChildNodes()) {
-        checkCaptureKing(
-          finalSquare,
-          move,
-          color,
-          count,
-          Captured,
-        );
+        checkCaptureKing(finalSquare, move, color, count, Captured);
       }
     });
   }
@@ -349,7 +315,7 @@ function checkCaptureKing(
     }
     /* second capturing process */
     if (finalSquare.hasChildNodes()) {
-      checkCaptureKing(finalSquare, destSquare, color,count,Captured);
+      checkCaptureKing(finalSquare, destSquare, color, count, Captured);
       break;
     }
     let newDirection = sens % 7 === 0 ? [9] : [7];
@@ -358,13 +324,7 @@ function checkCaptureKing(
       movesArray.forEach((move) => {
         let squareTarget = document.getElementById(move);
         if (squareTarget.hasChildNodes()) {
-          checkCaptureKing(
-            finalSquare,
-            move,
-            color,
-            count,
-            Captured,
-          );
+          checkCaptureKing(finalSquare, move, color, count, Captured);
         }
       });
     }
@@ -373,13 +333,7 @@ function checkCaptureKing(
       movesArray.forEach((move) => {
         let squareTarget = document.getElementById(move);
         if (squareTarget.hasChildNodes()) {
-          checkCaptureKing(
-            finalSquare,
-            move,
-            color,
-            count,
-            Captured,
-          );
+          checkCaptureKing(finalSquare, move, color, count, Captured);
         }
       });
     }
